@@ -1,17 +1,20 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"compress/zlib"
 	"fmt"
+	"io"
+	"path/filepath"
+	"strings"
+
 	// Uncomment this block to pass the first stage!
 	"os"
 )
 
 // Usage: your_git.sh <command> <arg1> <arg2> ...
 func main() {
-	// You can use print statements as follows for debugging, they'll be visible when running tests.
-	fmt.Println("Logs from your program will appear here!")
-
-	// Uncomment this block to pass the first stage!
 
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "usage: mygit <command> [<args>...]\n")
@@ -32,6 +35,36 @@ func main() {
 		}
 
 		fmt.Println("Initialized git directory")
+
+	case "cat-file":
+		sha := os.Args[len(os.Args)-1]
+		blobPath := filepath.Join(".git/objects", sha[:2], sha[2:])
+
+		files, err := os.Open(blobPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing file: %s\n", err)
+		}
+		defer files.Close()
+
+		// io.ByteReaderを実装したReaderを生成
+		br := bufio.NewReader(files)
+
+		zr, err := zlib.NewReader(br)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing file: %s\n", err)
+		}
+		defer zr.Close()
+
+
+		buf := new(bytes.Buffer)
+		_, err = io.Copy(buf, zr)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing file: %s\n", err)
+		}
+
+		split := strings.Split(buf.String(), "\000")
+		blobBody := split[1]
+		fmt.Print(blobBody)
 
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
