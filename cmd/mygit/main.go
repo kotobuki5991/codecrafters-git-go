@@ -8,22 +8,33 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"path/filepath"
 	"strings"
 
 	// Uncomment this block to pass the first stage!
 	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/labstack/gommon/log"
 )
 
 const (
 	GIT_DIRE = ".git"
 	GIT_OBJECT_DIRE = ".git/objects"
 	GIT_REFS_DIRE = ".git/refs"
+	GIT_API_PROTOCOL_SCHEME = "https://api.github.com"
+	GIT_REPO_NAME = "codecrafters-io/git-starter-go"
 )
 
 // Usage: your_git.sh <command> <arg1> <arg2> ...
 func main() {
-
+	// .envファイルを読み込みます
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+	GIT_OWNER_NAME := os.Getenv("GIT_OWNER_NAME")
+	fmt.Println(GIT_OWNER_NAME)
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "usage: mygit <command> [<args>...]\n")
 		os.Exit(1)
@@ -48,6 +59,9 @@ func main() {
 		catFile()
 	case "hash-object":
 		hashObject()
+	case "ls-tree":
+		treeHash := os.Args[3]
+		lsTree(GIT_OWNER_NAME, treeHash)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
@@ -123,4 +137,33 @@ func hashObject() {
 	zw.Close()
 
 	fmt.Printf("%x", sha)
+}
+
+func lsTree(gitOwnerName string, treeSha string) {
+	// GET APIのurl
+	url := fmt.Sprintf("%s/repos/%s/%s/git/trees/%s", GIT_API_PROTOCOL_SCHEME, gitOwnerName, GIT_REPO_NAME, treeSha)
+	fmt.Println(url)
+	// HTTPクライアントを作成
+	client := &http.Client{}
+
+	// HTTPリクエストを作成
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+			panic(err)
+	}
+
+	// Acceptヘッダーを設定
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	// リクエストを送信
+	resp, err := client.Do(req)
+	if err != nil {
+			panic(err)
+	}
+	defer resp.Body.Close()
+
+	// レスポンスを処理
+	// ...
+
+	fmt.Println(resp.Status)
 }
