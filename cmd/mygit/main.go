@@ -15,6 +15,7 @@ import (
 	"os"
 
 	"github.com/codecrafters-io/git-starter-go/cmd/mygit/util"
+	myzlib "github.com/codecrafters-io/git-starter-go/cmd/mygit/zlib"
 )
 
 const (
@@ -145,13 +146,14 @@ func lsTree(treeSha string) {
 }
 
 func writeTree() {
-	filePaths, err := util.GetFilePathsWalk()
+	direZlibBlob, err := myzlib.CompressDire("/tmp")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error get filePaths: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Error compress dir: %s\n", err)
 		os.Exit(1)
 	}
-	for _, v := range filePaths {
-		fmt.Println(v)
-	}
+	fmt.Println(util.GetHashByBlob(direZlibBlob))
+	// for _, v := range filePaths {
+	// 	fmt.Println(v)
+	// }
 	// hashObject()
 }

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -30,11 +31,10 @@ func GetFilePathsWalk() ([]string, error) {
 		fmt.Printf("ファイルパスの取得中にエラーが発生しました: %v\n", err)
 		return []string{}, err
 	}
-
-	// 取得したファイルパスを出力
-	fmt.Println("カレントディレクトリ以下のファイルパス:")
-	for _, path := range filePaths {
-		fmt.Println(path)
-	}
 	return filePaths, nil
+}
+
+func GetHashByBlob(blob []byte) [20]byte {
+	sha := sha1.Sum(blob)
+	return sha
 }
