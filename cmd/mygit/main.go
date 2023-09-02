@@ -13,6 +13,8 @@ import (
 
 	// Uncomment this block to pass the first stage!
 	"os"
+
+	"github.com/codecrafters-io/git-starter-go/cmd/mygit/util"
 )
 
 const (
@@ -48,6 +50,8 @@ func main() {
 			treeHash := os.Args[3]
 			lsTree(treeHash)
 		}
+	case "write-tree":
+		writeTree()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
@@ -138,4 +142,16 @@ func lsTree(treeSha string) {
 			fmt.Println(dirName)
 		}
 	}
+}
+
+func writeTree() {
+	filePaths, err := util.GetFilePathsWalk()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error get filePaths: %s\n", err)
+		os.Exit(1)
+	}
+	for _, v := range filePaths {
+		fmt.Println(v)
+	}
+	// hashObject()
 }
