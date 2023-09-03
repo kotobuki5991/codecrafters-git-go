@@ -15,6 +15,7 @@ import (
 	// Uncomment this block to pass the first stage!
 	"os"
 
+	"github.com/codecrafters-io/git-starter-go/cmd/mygit/date"
 	"github.com/codecrafters-io/git-starter-go/cmd/mygit/util"
 	// myzlib "github.com/codecrafters-io/git-starter-go/cmd/mygit/zlib"
 )
@@ -336,7 +337,5 @@ func writeTree(dir string, write bool) (objectname string, err error) {
 }
 
 func commitTree(treeSha string, commitSha string, commitMsg string) {
-	fmt.Println(treeSha)
-	fmt.Println(commitSha)
-	fmt.Println(commitMsg)
+	date.GetCommitDate()
 }
