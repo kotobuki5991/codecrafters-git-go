@@ -17,7 +17,7 @@ import (
 
 	"github.com/codecrafters-io/git-starter-go/cmd/mygit/date"
 	"github.com/codecrafters-io/git-starter-go/cmd/mygit/util"
-	// myzlib "github.com/codecrafters-io/git-starter-go/cmd/mygit/zlib"
+	myzlib "github.com/codecrafters-io/git-starter-go/cmd/mygit/zlib"
 )
 
 const (
@@ -67,10 +67,17 @@ func main() {
 		// writeTree()
 	case "commit-tree":
 		treeSha := os.Args[2]
-		commitSha := os.Args[4]
 		commitMsg := os.Args[len(os.Args)-1]
 
-		commitTree(treeSha, commitSha, commitMsg)
+		parentCommitSha := ""
+
+		for i, v := range os.Args {
+			if v == "-p" {
+				parentCommitSha = os.Args[i+1]
+			}
+		}
+
+		commitTree(treeSha, parentCommitSha, commitMsg)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
@@ -336,6 +343,36 @@ func writeTree(dir string, write bool) (objectname string, err error) {
 	return objectname, nil
 }
 
-func commitTree(treeSha string, commitSha string, commitMsg string) {
-	date.GetCommitDate()
+func commitTree(treeSha string, parentCommitSha string, commitMsg string) {
+	committer := "committer"
+	mail := "hoge@gmail.com"
+	commitDate := date.FormatNowTimezoneOffset()
+
+	treeInfo := fmt.Sprintf("tree %s\n", treeSha)
+	parentInfo := fmt.Sprintf("parent %s\n", parentCommitSha)
+	authorInfo := fmt.Sprintf("author %s <%s> %s\n", committer, mail, commitDate)
+	committerInfo := fmt.Sprintf("committer %s <%s> %s\n\n", committer, mail, commitDate)
+	commitMsgInfo := fmt.Sprintf("%s\n", commitMsg)
+
+	commitObjContent := []byte{}
+	commitObjContent = append(commitObjContent, []byte(treeInfo)...)
+	if parentCommitSha != "" {
+		commitObjContent = append(commitObjContent, []byte(parentInfo)...)
+	}
+	commitObjContent = append(commitObjContent, []byte(authorInfo)...)
+	commitObjContent = append(commitObjContent, []byte(committerInfo)...)
+	commitObjContent = append(commitObjContent, []byte(commitMsgInfo)...)
+
+	commitHeader := fmt.Sprintf("commit %d\x00", len(commitObjContent))
+	data := append([]byte(commitHeader), commitObjContent...)
+	zlibContent, err := myzlib.CompressData(data)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error compress content", err)
+	}
+
+	sha1Hex := util.GetHashByBlob(zlibContent)
+
+	WriteObject(sha1Hex, zlibContent)
+
+	fmt.Println(sha1Hex)
 }

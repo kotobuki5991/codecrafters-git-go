@@ -42,3 +42,21 @@ func CompressDire(dirPath string) ([]byte, error) {
 
 	return compressedBlobData.Bytes(), nil
 }
+
+func CompressData(data []byte) ([]byte, error) {
+	var compressedData bytes.Buffer
+	zlibWriter := zlib.NewWriter(&compressedData)
+
+	// データをzlibWriterに書き込み
+	_, err := zlibWriter.Write(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// zlibWriterを閉じて、バッファに圧縮データを書き込む
+	zlibWriter.Close()
+
+	// 圧縮されたデータを取得
+	compressedBytes := compressedData.Bytes()
+	return compressedBytes, nil
+}
