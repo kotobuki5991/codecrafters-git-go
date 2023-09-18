@@ -15,6 +15,7 @@ import (
 	// Uncomment this block to pass the first stage!
 	"os"
 
+	"github.com/codecrafters-io/git-starter-go/cmd"
 	"github.com/codecrafters-io/git-starter-go/cmd/mygit/date"
 	"github.com/codecrafters-io/git-starter-go/cmd/mygit/util"
 	myzlib "github.com/codecrafters-io/git-starter-go/cmd/mygit/zlib"
@@ -32,7 +33,7 @@ func main() {
 	case "init":
 		for _, dir := range []string{GIT_DIRE, GIT_OBJECT_DIRE, GIT_REFS_DIRE} {
 			if err := os.MkdirAll(dir, 0755); err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating directory: %s\n", err)
+				fmt.Fprintf(os.Stderr, "Error creating cloneDir: %s\n", err)
 			}
 		}
 
@@ -41,7 +42,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Error writing file: %s\n", err)
 		}
 
-		fmt.Println("Initialized git directory")
+		fmt.Println("Initialized git cloneDir")
 
 	case "cat-file":
 		catFile()
@@ -78,6 +79,10 @@ func main() {
 		}
 
 		commitTree(treeSha, parentCommitSha, commitMsg)
+	case "clone":
+		repoUrl := os.Args[2]
+		cloneDir := os.Args[3]
+		cmd.Clone(repoUrl, cloneDir)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
@@ -243,7 +248,7 @@ func lsTree(treeSha string) {
 // 		if strings.Contains(v, ".git") {
 // 			continue
 // 		}
-// 		dirHash, err := util.CalculateDirectoryHash(v)
+// 		dirHash, err := util.CalculatecloneDirHash(v)
 // 		if err != nil {
 // 			fmt.Fprintf(os.Stderr, "Error get dire hash: %s\n", err)
 // 			os.Exit(1)
@@ -370,7 +375,7 @@ func commitTree(treeSha string, parentCommitSha string, commitMsg string) {
 		fmt.Fprintf(os.Stderr, "Error compress content", err)
 	}
 
-	sha1Hex := util.GetHashByBlob(zlibContent)
+	sha1Hex := util.GetHashByBlob(data)
 
 	WriteObject(sha1Hex, zlibContent)
 
