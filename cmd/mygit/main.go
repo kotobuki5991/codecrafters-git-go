@@ -83,11 +83,16 @@ func main() {
 		repoUrl := os.Args[2]
 		cloneDir := os.Args[3]
 		cmd.Clone(repoUrl, cloneDir)
+		os.Exit(0)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
 	}
 }
+
+// func InitCmd(repoPath string) {
+
+// }
 
 func getTreeInfos(sha string) []string {
 	blobPath := filepath.Join(GIT_OBJECT_DIRE, sha[:2], sha[2:])

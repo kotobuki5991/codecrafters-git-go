@@ -16,6 +16,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"github.com/go-git/go-git/v5"
 )
 
 const (
@@ -50,22 +51,41 @@ type Object struct {
 }
 
 func Clone(repoUrl string, cloneDir string) {
+
 	// repoUrl := os.Args[2]
 	// directory := os.Args[3]
 	repoPath := path.Join(".", cloneDir)
 	if err := os.MkdirAll(repoPath, 0750); err != nil {
+		fmt.Errorf("error creating directory: %s\n", err)
+	}
+
+	// repoPath, err := ioutil.TempDir("", "worktree")
+	// if err != nil {
+	// 	fmt.Errorf("error create repo path: %s\n", err)
+	// }
+
+
+	for _, dir := range []string{".git", ".git/objects", ".git/refs"} {
+		dirPath := path.Join(repoPath, dir)
+		if err := os.Mkdir(dirPath, 0755); err != nil {
+			fmt.Errorf("Error creating directory: %s\n", err.Error())
+		}
+	}
+
+	headFileContents := []byte("ref: refs/heads/master\n")
+	headPath := path.Join(repoPath, ".git/HEAD")
+	if err := ioutil.WriteFile(headPath, headFileContents, 0644); err != nil {
+		fmt.Errorf("Error writing file: %s\n", err.Error())
+	}
+
+	fmt.Println("Initialized git directory")
+
+
+
+	if err := os.MkdirAll(repoPath, 0750); err != nil {
 		fmt.Errorf("error creating cloneDir: %s\n", err)
 	}
 
-	// log.Printf("[Debug] git url: %s, dir: %s\n", repoUrl, cloneDir)
-	// status := initCmd(repoPath)
-	// if status.err != nil {
-	// 	return &Status{
-	// 		exitCode: ExitCodeError,
-	// 		err:      fmt.Errorf("error initializing git repository: %s\n", status.err),
-	// 	}
-	// }
-	// latest commit: 7b8eb72b9dfa14a28ed22d7618b3cdecaa5d5be0
 	commitSha, err := fetchLatestCommitHash(repoUrl)
 	if err != nil {
 		fmt.Errorf("error fetch latest commit hash: %s\n", err)
@@ -84,6 +104,13 @@ func Clone(repoUrl string, cloneDir string) {
 	if err := restoreRepository(repoPath, commitSha); err != nil {
 		fmt.Errorf("error restoring repository: %s\n", err)
 	}
+	log.Println(repoPath)
+	gitRepo, err := git.PlainOpen(repoPath)
+	if err != nil {
+		fmt.Errorf("error plain open: %s\n", err)
+	}
+	log.Println(gitRepo)
+	log.Println(err)
 }
 
 
@@ -499,6 +526,7 @@ func restoreRepository(repoPath, commitSha string) error {
 	if err := traverseTree(repoPath, "", treeSha); err != nil {
 		return err
 	}
+	log.Printf("[Debug] finish restore repository: %s\n", treeSha)
 	return nil
 }
 
